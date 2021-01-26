@@ -1,0 +1,161 @@
+---
+title: "Assignment 1"
+subtitle: "Assignment 1"
+author: "Esther Shalini Rajasekaran"
+thanks:"Code and data are available at: LINK."
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+output:
+  bookdown::pdf_document2:
+toc: FALSE
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("tidyverse",repos = "http://cran.us.r-project.org")
+install.packages("janitor",repos = "http://cran.us.r-project.org")
+install.packages("here",repos = "http://cran.us.r-project.org")
+install.packages("jsonlite",repos = "http://cran.us.r-project.org")
+install.packages("opendatatoronto",repos = "http://cran.us.r-project.org")
+install.packages("lubridate",repos = "http://cran.us.r-project.org")
+install.packages("ggplot2",repos = "http://cran.us.r-project.org")
+install.packages("dplyr",repos = "http://cran.us.r-project.org")
+install.packages("hrbrthemes",repos = "http://cran.us.r-project.org")
+install.packages("jtools",repos = "http://cran.us.r-project.org")
+install.packages("tidyverse",repos = "http://cran.us.r-project.org")
+install.packages("plyr",repos = "http://cran.us.r-project.org")
+install.packages("dplyr",repos = "http://cran.us.r-project.org")
+library(janitor)
+library(here)
+library(jsonlite)
+library(opendatatoronto)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(hrbrthemes)
+library(jtools)
+library(tidyverse)
+library(plyr)
+library(dplyr)
+```
+
+# Introduction
+Toronto has the largest shelter system in Canada.It supports 75 shelter/respite sites sheltering approximately 7,000 people every night.11 locations are operated by the City and 64 programs are operated by community non-profit agencies.The City has implemented an tiered approach to COVID-19 where the the primary goal is to save lives and make sure the health care system does not become over.[@torontoreport]
+The dataset chosen for analysis is a listing of all active shelters serving the City of Toronto from Jan - Dec,2020 and is published by Shelter,Support and Housing Administration.The dataset provides information on the name of the shelter,program name,sector served,addresses of the shelter,total capacity and total occupancy as of 4.00 A.M daily.Due to privacy and confidentiality the dataset does not include details regarding violence against women shelters.The total capacity also does not reflect the physical distancing measures that were implemented due to COVID-19.[@opendata]
+
+# Data
+```{r echo=FALSE}
+datanew <- here::here('input/datashelter2020.csv')
+datashelter2020 = read.csv(datanew)
+```
+
+The dataset consist of the following variables `r colnames(datashelter2020)` and has a total `r nrow(datashelter2020)` rows.It provides details on occupancy, vacancy, and capacity data for the shelter and overnight services system.
+
+1. The `r names(datashelter2020[12])` was chosen as the **independent variable** for our analysis and is measured on a continuous scale.It includes a count of all individuals and, where capacity is measured at the room level, the number of rooms occupied.[@torontoshelter]
+
+2. The following variables were chosen as **dependent variables** for the analysis.
+      + `r names(datashelter2020[11])` - This variable is measured categorically and it captures the various sectors who occupy the shelters and has the following values - Men,Women,Families,Co-ed & Youth.
+
+3. The following variables were chosen as **control variables** for the analysis
+      + `r names(datashelter2020[13])` - This variable is measured on a continuous scale and is measured in rooms for family programs and hotel and interim housing COVID-19 response programs.
+      + `r names(datashelter2020[2])` - This is the date for which the occupancy was calculated for each shelter.It is captured in MM/DD/YYYY format and is measured ordinally.
+
+Lets have a look at the data.Given below \@ref(tab:table11)is a snapshot of the data
+```{r table11, echo=FALSE}
+data1 = head(datashelter2020)
+knitr::kable(data1,caption = "Snapshot of the data")
+```
+
+# Data Cleaning and Preparation
+The columns name are cleaned so it is easier to read . 
+```{r echo=FALSE}
+datashelter2020 <- 
+  datashelter2020 %>% 
+  janitor::clean_names()
+```
+The column name file refers to the year from which the dataset was pulled . In this case since all the data was pulled from 2020 that field can be dropped.
+```{r echo=FALSE}
+datashelter2020 = subset(datashelter2020,select = -c(1))
+```
+The date field appears to be in character hence changing it to a date field using mm/dd/yyyy format
+```{r echo=FALSE}
+datashelter2020$occupancy_date = mdy(datashelter2020$occupancy_date)
+```
+
+The categorically variable - Sector is recoded to the following
+      +Men = 1
+      +Women = 2
+      +Co-ed = 3
+      +Youth = 4
+      +Families = 5
+      
+```{r echo=FALSE}
+datashelter2020$sectornew = revalue(datashelter2020$sector, c("Men"="1", "Women"="2", "Co-ed"="3", "Youth"="4", "Families"="5"))
+datashelter2020$sectornew = as.factor(datashelter2020$sectornew)
+detach("package:plyr", unload = TRUE)
+```
+
+# Descriptive Analysis
+To gain an understanding of the profile of the dataset, descriptive statistical techniques were used to explore the data. Frequency tables and proportion distributions were built to give us an overview of how the variables were related.
+Now lets look at the monthly occupancy.The table \@ref(tab:table2) below shows the monthly total occupancy and capacity and it clearly shows that there is a decrease in the percentage of monthly occupancy from Jan to December 2020.This might also be due to the fact that more people prefer to stay at their homes than moving to shelter homes due to COVID.
+
+```{r table2, echo=FALSE}
+table2 = datashelter2020 %>% group_by(month=floor_date(occupancy_date,"month")) %>% summarise(TOTALOCCUPANCY = sum(occupancy),TOTALCAPACITY = sum(capacity),OCCUPACYCAPACITYRATIO = (TOTALOCCUPANCY/TOTALCAPACITY))
+knitr::kable(table2,caption = "Total Occupancy Vs Capacity based on Occupancy Dater")
+```
+
+
+The total capacity for various months was calculated to identify if there are any particular months where the occupancy was high.Based on the Figure\@ref(ref:figure2) there is a decrease in the monthly occupancy rate from Jan to December.
+
+```{r figure2, echo=FALSE, fig.cap="Monthly total Occupancy ", fig.height=4, fig.width=8}
+figure1 = datashelter2020 %>% group_by(month=floor_date(occupancy_date,"month")) %>% summarise(TOTALOCCUPANCY = sum(occupancy),TOTALCAPACITY = sum(capacity))
+ggplot(figure1, aes(x=month, y=TOTALOCCUPANCY))+geom_line( color="#69b3a2")
+```
+
+Now lets look at the total occupancy Vs Capacity for various sectors.The figure\@ref(fig:figure1) below shows that more families tend to move to shelter homes than other sectors.
+
+
+```{r figure1, echo=FALSE, fig.cap="Mean Occupancy based on Sector", fig.height=4, fig.width=8}
+table1 = datashelter2020 %>% group_by(sector) %>% summarise(TOTALOCCUPANCY = sum(occupancy),TOTALCAPACITY = sum(capacity),DIFFERENCE = TOTALCAPACITY - TOTALOCCUPANCY)
+knitr::kable(table1,caption = "Total Occupancy Vs Capacity based on Sector")
+```
+
+The table \@ref(tab:table1) below shows that families exceed the total capacity allocated than other sectors.One reason could be become these might be large families who would occupy more be rooms than the normal family size.The details on family size is not mentioned in the dataset.
+
+```{r table1, echo=FALSE}
+table1 = datashelter2020 %>% group_by(sector) %>% summarise(TOTALOCCUPANCY = sum(occupancy),TOTALCAPACITY = sum(capacity),DIFFERENCE = TOTALCAPACITY - TOTALOCCUPANCY)
+knitr::kable(table1,caption = "Total Occupancy Vs Capacity based on Sector")
+```
+
+# Model
+## Ordinary Least Squares (OLS) Regression
+In this study due to multiple parameters affecting the total occupancy of a shelter home,to minimize the errors,regression analysis with least squares method is used.OLS reflects the relationship between X and y variables following the simple formula:
+y = b0 + b1X1 + b2X2 + E
+
+Where
+  +b0 — y — intercept
+  +b1,b2 — slope
+  +X, X1, X2 — predictor
+  +y — Target variable
+
+OLS is an estimator in which the values of b1 and b0 (from the above equation) are chosen in such a way as to minimize the sum of the squares of the differences between the observed dependent variable and predicted dependent variable. 
+The analysis suggests that 
+  +R-Square = 88.32% of the variance in total occupancy of each shelter home can be explained by various Sectors and total capacity
+  +Intercept = The average total occupancy is 2.385 when it is Men and total capacity is 0
+  +The coefficient for women is -1.031 and significantly different from 0,suggesting that the total occupancy for women are on an average 1.031 lower than men holding other variables constant
+  +The coefficient for Co-ed is -0.07 suggesting that the total occupancy for co-ed are on an average 0.07 lower than men holding other variables constant.The model states that total occupancy and total capacity are not statistically significant.
+  +The coefficient for Youth is 0.92 and significantly different from 0,suggesting that the total occupancy for Youth are on an average 0.92 higher than men holding other variables constant
+  +The coefficient for Families is -7.43 and significantly different from 0,suggesting that the total occupancy for Families are on an average 7.43 lower than men holding other variables constant
+Based on the Figure\@ref(ref:linearregression)
+
+```{r linearregression, echo=FALSE, fig.cap="OLS Results", fig.height=4, fig.width=8}
+lmdatashelter = lm(occupancy ~ sectornew + capacity,data = datashelter2020)
+print(summary(lmdatashelter))
+```
+
+graph
+```{r echo=FALSE}
+plot <- ggplot(data=datashelter2020, aes(x=occupancy, y=capacity, colour=factor(sectornew)))
+plot + stat_smooth(method=lm, fullrange=FALSE) + geom_point() + scale_fill_discrete(name = "Sector", labels = c("Men","Women","Co-ed","Youth","Families"))
+```
