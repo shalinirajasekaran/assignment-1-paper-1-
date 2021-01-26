@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/W32TeX) (preloaded format=pdflatex 2021.1.22)  25 JAN 2021 21:33
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/W32TeX) (preloaded format=pdflatex 2021.1.22)  25 JAN 2021 21:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -627,16 +627,16 @@ File: Assignment-1_files/figure-latex/unnamed-chunk-6-1.pdf Graphic file (type
 pdf)
 <use Assignment-1_files/figure-latex/unnamed-chunk-6-1.pdf>
 Package pdftex.def Info: Assignment-1_files/figure-latex/unnamed-chunk-6-1.pdf 
- used on input line 341.
+ used on input line 342.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 345--347
+Underfull \hbox (badness 10000) in paragraph at lines 346--348
 \T1/lmr/m/n/10 / / www . toronto . ca / city -[] government / data -[] research
  -[] maps / research -[] reports / housing -[] and -[] homelessness -[]
  []
 
 
-Underfull \hbox (badness 5460) in paragraph at lines 351--353
+Underfull \hbox (badness 5460) in paragraph at lines 352--354
 \T1/lmr/m/n/10 tiony. []$https : / / www . toronto . ca / city -[] government /
  data -[] research -[] maps / research -[] reports / housing -[] and -[]
  []
@@ -669,7 +669,7 @@ onts/type1/public/lm/lmr17.pfb><c:/Users/esthe/AppData/Roaming/TinyTeX/texmf-di
 st/fonts/type1/public/lm/lmr9.pfb><c:/Users/esthe/AppData/Roaming/TinyTeX/texmf
 -dist/fonts/type1/public/lm/lmri10.pfb><c:/Users/esthe/AppData/Roaming/TinyTeX/
 texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
-Output written on Assignment-1.pdf (5 pages, 814822 bytes).
+Output written on Assignment-1.pdf (5 pages, 814860 bytes).
 PDF statistics:
  143 PDF objects out of 1000 (max. 8388607)
  121 compressed objects within 2 object streams
