@@ -1,0 +1,149 @@
+---
+title: "Is COVID-19 causing homeless people to move out of Shelters ?"
+subtitle: "Assignment 1"
+author: "Esther Shalini Rajasekaran"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: "Homeless has been a major concern across Canada and there has been an growing need to understand the reason why people become homeless.One of the key reason of people moving to shelter homes is homelessness.In this analysis we would like to analyse whether COVID-19 has caused homeless people to move of Shelters.During the recent months there has been a decrease in occupancy rate across most of the shelters in Toronto espcially when the pandemic hit the city of Toronto.Some of the key factors that were examined for this analysis were occupancy to capacity ratio,sector and occupancy date.We found important differences in shelter home use between familiies,men and women with a noticable increase in families.There was a positive correlation between occupancy and capacity and the occupancy rate has gradually descreased over the months.A gradually decrease of chronic shelter users also indicates a serious social problem in the system that needs to be addressed"
+output:
+  bookdown::pdf_document2:
+toc: FALSE
+bibliography: references.bib
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[CO,CE]{Is COVID-19 causing homeless people to move out of Shelters ?}
+- \fancyfoot[CO,CE]{https://github.com/shalinirajasekaran/assignment-1-paper-1-.git}
+---
+<!-- #Loading the packages and setting up the enviornment -->
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("tidyverse",repos = "http://cran.us.r-project.org")
+install.packages("janitor",repos = "http://cran.us.r-project.org")
+install.packages("here",repos = "http://cran.us.r-project.org")
+install.packages("opendatatoronto",repos = "http://cran.us.r-project.org")
+install.packages("lubridate",repos = "http://cran.us.r-project.org")
+install.packages("ggplot2",repos = "http://cran.us.r-project.org")
+install.packages("dplyr",repos = "http://cran.us.r-project.org")
+install.packages("hrbrthemes",repos = "http://cran.us.r-project.org")
+install.packages("jtools",repos = "http://cran.us.r-project.org")
+library(janitor)
+library(here)
+library(opendatatoronto)
+library(lubridate)
+library(ggplot2)
+library(hrbrthemes)
+library(jtools)
+library(tidyverse)
+library(dplyr)
+```
+
+# Introduction
+There has been a growing presence of homeless people on the streets of Toronto including the suburbs.While there are no exact numbers on the number of homeless people in GTA there has been an increase in the number of people moving to shelter homes.A number of people who are homeless rarely never use shelters and live off the streets.For our analysis we have considered all occupants moving to shelters are homeless people.Toronto has the largest shelter system in Canada and it supports 75 shelter or respite sites sheltering approximately 7,000 people every night.11 locations are operated by the City and 64 programs are operated by community non-profit agencies.[@torontoreport].Many shelters have specialized services including serving youth,families with children, aboriginal persons and men or women exclusively.According to reports there is a 98% occupancy rate in Toronto shelters every night[@shelterdata] and majority of shelter users receive social assistance however it does not contribute to the growing affordability issue.However during the pandemic there seems to be a reduction in occupancy rate and from our
+analysis we wanted to understand the factors that contribute to the decrease in shelter home occupancy.This will help in better planning and resourcing especially during these times where social distancing needs to be practiced.We used descriptive analysis,correlation and regression to understand if there was any relationship between occupancy and capacity.While the dataset provides details on the occupancy it does not provide any details on the age of the occupant or the family size of the occupancy.Understanding these details would have helped us determine the if age was also a contributing factor to homelessness.
+
+# Data
+The dataset chosen for analysis is a listing of all active shelters serving the City of Toronto for the period - January to December,2020 and the data is published by Shelter,Support and Housing Administration - City of Toronto via Open Data Portal[@here].The dataset provides information on the name of the shelter,program name,sector served,addresses of the shelter,total capacity and total occupancy as of 4.00 A.M daily.Due to privacy and confidentiality the dataset does not include details regarding violence against women shelters.The total capacity also does not reflect the physical distancing measures that were implemented due to COVID-19.[@opendata]. 
+The dataset consist of 13 variables and 41061 observations.The details of the variables and given below [@opendatatoronto]
+
+* id - Unique row identifier for Open Data database
+* OCCUPANCY_DATE = Date of the data
+* SECTOR = Clientele of the shelter. Sector can be women, men, youth, co-ed, or family.
+* SHELTER_POSTAL_CODE = Postal code of the shelter
+* CAPACITY = Maximum number of spaces available for homeless clients
+* SHELTER_PROVINCE = Province of the shelter
+* FACILITY_NAME = Name of the facility.In some cases shelters share the same name but the actual service is provided in multiple facilities.
+* SHELTER_NAME = Name of the shelter site. The shelter name generally delineates the subgroup within the organization that is responsible for the shelter.
+* OCCUPANCY = Number of homeless clients in the program at 4:00 AM. Occupancy is a point in time number at 4 AM of the next day.
+* ORGANIZATION_NAME = Organization Name. The registered name of the non-profit entity responsible for the shelter operation.
+* SHELTER_ADDRESS = Address of the shelter
+* SHELTER_CITY = City of the shelter
+* PROGRAM_NAME = Name of the program within the facility. Some shelters offer different programs or services within the same facility.
+
+The columns names were cleaned [@janitor] so it is easier to read and perform analysis[@dplyr].The variable - file does not exist in the original dataset but gets added once the dataset is loaded.This refers to the year from which the dataset was pulled . In this case since all the data was pulled from 2020 that field was dropped.The occupancy date field appears to be in character and hence was changed to a date field[@lubridate].
+The occupancy was chosen as the **independent variable** for the analysis and is measured on a continuous scale.It includes a count of all individuals where capacity is measured at the room level i.e the number of rooms occupied.The capacity was chosen as **dependent variable** to identify if occupancy rate is based on the capacity.This variable is measured on a continuous scale and is also measured in room level i.e the maximum number of rooms allocated[@torontoshelter].The occupancy rate was also analyzed based on sector and occupancy date to see if there is an decrease in occupancy for certain months.This sector is measured categorically and it captures the various sectors who occupy the shelters and has the following values - Men,Women,Families,Co-ed & Youth.
+<!-- loading the data from input folder and reading the file. -->
+```{r echo=FALSE}
+datanew <- here::here('input/datashelter2020.csv')
+datashelter2020 = read.csv(datanew)
+```
+<!-- Cleaning column names -->
+```{r echo=FALSE}
+datashelter2020 <- 
+  datashelter2020 %>% 
+  janitor::clean_names()
+```
+<!-- Dropping column - file -->
+```{r echo=FALSE}
+datashelter2020 = subset(datashelter2020,select = -c(1))
+```
+
+<!-- The date field appears to be in character hence changing it to a date field. -->
+```{r include=FALSE}
+datashelter2020$occupancy_date = mdy(datashelter2020$occupancy_date)
+```
+# Model
+To gain an understanding of the profile of the dataset, descriptive statistical techniques were used to explore the data. Frequency tables and proportion distributions were built to give us an overview of how the variables were related. Total occupancy and capacity were compared across months to identify if there were any significant changes in the occupancy rate.The table \@ref(tab:table1) shows the total occupancy and capacity for various months[@tidyverse].The total capacity was calculated to identify if there were any particular months where the occupancy was higher than capacity. Based on the figure \@ref(fig:figure1) there was a decrease in the monthly occupancy rate from Jan to December[@ggplot2] and this might be because more homeless people prefer not to stay in crowded areas like shelters due to COVID-19.
+The total occupancy and capacity was also analyzed for various sectors. The figure\@ref(fig:figure2) shows that more families tend to move to shelter homes than other sectors[@ggplot2]. The table \@ref(tab:table2) shows that families exceed the total capacity allocated than other sectors. One reason could be that these might be large families who tend to occupy more rooms than the normal family size. Finally, the occupancy to capacity ratio was compared for various cities to see if there were any particular cities where there the occupancy rate was high. Based on the figure\@ref(fig:figure3) Toronto has the highest occupancy rate but has gradually reduced from Jan to December. This could also be due to COVID-19 where more people don't want to move to shelter homes.[@ggplot2]
+In this study correlation and regression analysis are used to understand the relationship between occupancy and capacity. Correlation looks at trends shared between two variables, and regression looks at causal relations between a predictor (independent variable) and a response (dependent) variable. From the graph \@ref(fig:figure4) we see that as capacity increases the occupancy also increases and hence we can determine that there is a positive correlation between Occupancy and Capacity[@ggplot2]. Based on the results the Pearson coefficient of correlation is 0.939 and concludes there is a high positive correlation between occupancy and capacity. Regression analysis was also used to understand if there is a linear relationship between occupancy and capacity. Based on the figure\@ref(fig:figure5) there seems to be a linear relationship between occupancy and capacity.
+
+<!-- The table showing monthly total occupancy and capacity -->
+```{r table1, echo=FALSE}
+table2 = datashelter2020 %>% group_by(month=floor_date(occupancy_date,"month")) %>% summarise(TOTALOCCUPANCY = sum(occupancy),TOTALCAPACITY = sum(capacity),OCCUPACYCAPACITYRATIO = (TOTALOCCUPANCY/TOTALCAPACITY))
+knitr::kable(table2,caption = "Total Occupancy Vs Capacity based on Occupancy Dater")
+```
+
+<!-- Graph showing monthly total occupancy and capacity -->
+```{r figure1, echo=FALSE, fig.cap="Monthly Occupancy and Capacity"}
+figure1 = datashelter2020 %>% group_by(month=floor_date(occupancy_date,"month")) %>% summarise(TOTALOCCUPANCY = sum(occupancy),TOTALCAPACITY = sum(capacity))
+ggplot(figure1, aes(x=month, y=TOTALOCCUPANCY))+geom_line( color="#69b3a2")
+```
+
+<!-- Graph comparing occupancy and capacity for various sectors -->
+```{r figure2, echo=FALSE, fig.cap="Mean Occupancy based on Sector"}
+datashelter2020 %>% group_by(sector) %>% 
+  summarise(TOTALOCCUPANCY = mean(occupancy)) %>%
+  ggplot(mapping = aes(x = sector,y = TOTALOCCUPANCY))+geom_bar(fill = "#0073C2FF", stat = "identity")
+```
+
+<!-- Table comparing occupancy and capacity for various sectors -->
+```{r table2, echo=FALSE}
+table1 = datashelter2020 %>% group_by(sector) %>% summarise(TOTALOCCUPANCY = sum(occupancy),TOTALCAPACITY = sum(capacity),DIFFERENCE = TOTALCAPACITY - TOTALOCCUPANCY)
+knitr::kable(table1,caption = "Total Occupancy Vs Capacity based on Sector")
+```
+
+<!-- A graph comparing occupancy to capacity for various cities. -->
+```{r figure3, echo=FALSE, fig.cap="Monthly Occupancy for various Cities"}
+citiesdate = datashelter2020 %>%
+  group_by(month=floor_date(occupancy_date),shelter_city) %>%
+  summarise(occupancy = sum(occupancy),.groups = 'drop')
+ggplot(citiesdate,aes(x = month, y = occupancy, color = shelter_city)) + 
+  geom_point(aes(group = shelter_city), alpha = 0.3) + labs(color = "Type",x = "Occupancy by month",y = "Total Occupancy")
+```
+
+<!-- A graph measuring correlation -->
+```{r figure 4, echo=FALSE, fig.cap="Correlation between Occupancy & Capacity"}
+ggplot(datashelter2020,aes(x = capacity,y = occupancy))+geom_point()
+```
+
+<!-- Pearson correlation co-efficient -->
+```{r warning=FALSE, include=FALSE}
+cor(datashelter2020$occupancy,datashelter2020$capacity,method="pearson")
+```
+
+<!-- Regression between occupancy and capacity -->
+```{r figure5, echo=FALSE, fig.cap="Regression between Occupancy & Capacity", fig.height=4, fig.width=8}
+lmdatashelter = lm(occupancy ~ capacity,data = datashelter2020)
+plot(occupancy ~ capacity,data = datashelter2020)
+abline(lmdatashelter)
+```
+
+# Conclusion
+Based on the analysis there seems to be a correlation between occupancy and capacity and increasing the capacity will address this issue.After the pandemic hit the city of Toronto there seems to be a reduction in occupancy rate especially in Toronto and one of the contributing factors might be homeless people prefer to stay outdoors in parks or tents than in shelters.A study conducted by the Canadian Medical association explains how shelters can be a ideal environment for the virus to spread faster due to shared accommodation[@canadianmedical].The city must take measures to provide a spacious environment and avoid crowding.They must increase capacity by arranging temporary shelters,enlarging shelter spaces and creating isolation pods for quarantine.They must also work with service providers to focus on building relationships and rapport with homeless people so they feel safe to move back to shelters.This will also decrease the risk of homeless people getting affected by COVID-19.
+
+## Weaknesses and next steps
+Because shelters are operated by different agencies, and most have developed unique intake systems, it becomes impossible to get a detailed information on the occupants of these shelters.This is one of the limitation in the analysis where the dataset does not provide any details on the age of the occupant or the family size of the occupancy.Understanding these details would have helped us determine if age was also a contributing factor to homelessness.
+Most of the research on homelessness are targeted towards shelter residents due to the fact that they are easily accessible than others.This is a limitation that needs to be addressed when performing research on homelessness.
+Some of the next steps would be to get more details on the age & family size of the occupant to understand if there is crowding in shelter homes when there are larger family sizes.It is also imperative that the City works towards increasing the capacity so more homeless people can move back to shelters.
+
+# References
+
