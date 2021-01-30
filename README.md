@@ -4,6 +4,6 @@ Homeless has been a major concern across Canada and there has been an growing ne
 
 # Details of folder structure
 * Input folder - Includes raw data
-* Output foler - Includes the .Rmd file,report and references file
-* Script foler - Includes .R file for importing and cleaning.
+* Output foler - Includes the .Rmd file for cleaning and analysing,report and references file
+* Script foler - Includes .R file for importing the data.
 
